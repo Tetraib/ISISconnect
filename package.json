@@ -12,7 +12,8 @@
     "pdfkit":"0.x.x",
     "request":"2.x.x",
     "multer":"0.x.X",
-    "body-parser":"1.X.X"
+    "body-parser":"1.X.X",
+    "encoding":"0.x.x"
 },
 "engines": {
     "node": "0.x.x",

@@ -59,11 +59,31 @@ db.once('open', function callback() {
         });
         res.send(200);
     });
+    
     app.get('/hello', function(req, res) {
         //set the download name
         res.setHeader('Content-disposition', 'attachment; filename=dramaticpenguin.txt');
         // Send the datas ad a file
         console.log(testdata);
         res.send(testdata);
+    });
+    
+    //use to receive the HL7 prescription and forward it to mirth
+    app.post('/postprescriptionhl7', function(req, res) {
+        //forward to mirth
+        request.post({
+            url: 'http://146.148.3.248:81/prescription/',
+            body: req.text,
+            headers: {
+                'Content-Type': 'text/plain; charset=UTF-8'
+            }
+        });
+        res.send(200);
+        
+    });
+    //used to receive the TXT prescription from mirth
+    app.post('/postprescriptiontxt', function(req, res) {
+        console.log(req.text);
+        res.send(200);
     });
 });
