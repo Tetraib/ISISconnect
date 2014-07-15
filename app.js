@@ -31,8 +31,6 @@ app.use(function(req, res, next) {
 process.env.MONGOCON = "mongodb://cloud9:ZSTqSa04E7Lp3ao@kahana.mongohq.com:10005/app26722556";
 app.listen(process.env.PORT, process.env.IP);
 
-//just test for now
-var testdata;
 
 
 //Start Mongoose
@@ -43,20 +41,23 @@ db.once('open', function callback() {
     //use to get the hl7 from mirth
     app.post('/posthl7', function(req, res) {
         console.log(req.text);
-        testdata = req.text;
         res.send(200);
     });
     //use to post the file in body and the patient info in the header and forward it to mirth
     app.post('/postcr', function(req, res) {
         // console.log(req.files);
         // Forward to mirth
+        console.log(req.headers.exam_infos);
+
         request.post({
             url: 'http://146.148.3.248:80/crtxt/',
             body: req.headers.exam_infos,
             headers: {
                 'Content-Type': 'text/plain'
             }
-        });
+        }, function (error, response, body) {
+    //HERE code to manage post errors
+    });
         res.send(200);
     });
     
@@ -64,8 +65,7 @@ db.once('open', function callback() {
         //set the download name
         res.setHeader('Content-disposition', 'attachment; filename=dramaticpenguin.txt');
         // Send the datas ad a file
-        console.log(testdata);
-        res.send(testdata);
+        
     });
     
     //use to receive the HL7 prescription and forward it to mirth
