@@ -4,8 +4,8 @@ var express = require("express"),
     db = mongoose.connection,
     request = require("request"),
     multer = require('multer'),
-    bodyParser = require('body-parser');
-
+    bodyParser = require('body-parser'),
+    PDFDocument = require 'pdfkit';
 //Use for upload file
 app.use(multer({
     dest: './uploads/'
@@ -49,7 +49,7 @@ db.once('open', function callback() {
         // Forward to mirth
         console.log(req.headers.exam_infos);
 
-        request.post({
+
             url: 'http://146.148.3.248:80/crtxt/',
             body: req.headers.exam_infos,
             headers: {
@@ -57,9 +57,9 @@ db.once('open', function callback() {
             }
         }, function (error, response, body) {
     //HERE code to manage post errors
-    });
+    })HERE 
         res.send(200);
-    });
+rs    });
     
     app.get('/hello', function(req, res) {
         //set the download name
@@ -87,3 +87,23 @@ db.once('open', function callback() {
         res.send(200);
     });
 });
+
+
+// create PDF a document
+var doc = new PDFDocument();
+// draw some text
+doc.fontSize(25)
+   .text('Dr George DELEPORTE')
+   .fontSize(20)
+   .text('10003796462')
+    .fontSize(14)
+    .moveDown()
+    .text('Interface')
+    .text('195 rue Adolphe Defrenne')
+    .text('59160 LOMME')
+    .moveDown()
+.text('08 26 30 07 00')
+.moveDown(2)
+.fontSize(25)
+.text('M. Paul VALLET - 05/05/1929', { align: 'right'});
+doc.end();
