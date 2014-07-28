@@ -5,7 +5,9 @@ var express = require("express"),
     request = require("request"),
     multer = require('multer'),
     bodyParser = require('body-parser'),
-    PDFDocument = require 'pdfkit';
+    PDFDocument = require('pdfkit');
+    
+    
 //Use for upload file
 app.use(multer({
     dest: './uploads/'
@@ -49,7 +51,7 @@ db.once('open', function callback() {
         // Forward to mirth
         console.log(req.headers.exam_infos);
 
-
+        request.post({
             url: 'http://146.148.3.248:80/crtxt/',
             body: req.headers.exam_infos,
             headers: {
@@ -57,9 +59,9 @@ db.once('open', function callback() {
             }
         }, function (error, response, body) {
     //HERE code to manage post errors
-    })HERE 
+    });
         res.send(200);
-rs    });
+    });
     
     app.get('/hello', function(req, res) {
         //set the download name
@@ -91,19 +93,58 @@ rs    });
 
 // create PDF a document
 var doc = new PDFDocument();
-// draw some text
-doc.fontSize(25)
-   .text('Dr George DELEPORTE')
-   .fontSize(20)
-   .text('10003796462')
-    .fontSize(14)
-    .moveDown()
-    .text('Interface')
-    .text('195 rue Adolphe Defrenne')
-    .text('59160 LOMME')
-    .moveDown()
+//
+doc.fontSize(14)
+.text('Interface')
+.fontSize(10)
+.text('195 rue Adolphe Defrenne')
+.text('59160 LOMME')
 .text('08 26 30 07 00')
+.text('————————————————')
+.fontSize(14)
+.text('Dr George DELEPORTE')
+.fontSize(10)
+.text('N° RPPS : 10003796462')
+.fontSize(18)
+.text('M. Paul VALLET', { align: 'right'})
+.fontSize(12)
+.text('Né(e) le 05/05/1929', {align: 'right'})
+.text('Etage 2 - Chambre 211', { align: 'right'})
+.text('Séjour n° 56941', { align: 'right'})
+.fontSize(10)
+.moveDown()
+.text('11 RUE D ARTOIR', { align: 'right'})
+.text('59320 EMMERIN', { align: 'right'})
+.text('03 20 07 97 49', { align: 'right'})
 .moveDown(2)
-.fontSize(25)
-.text('M. Paul VALLET - 05/05/1929', { align: 'right'});
+.fontSize(12)
+.text('Le 13/06/2014,')
+.moveDown()
+.fontSize(22)
+.text('ECHOGRAPHIE des voies urinaires', { align: 'center'})
+.fontSize(12)
+.moveDown()
+.text('INCIDENCES PARTICULIERES :')
+.text('-')
+.text('-')
+.text('-')
+.moveDown()
+.text('INDICATION : retention urinaire désondée.Bilan à la demande du Dr BALLEREAU')
+.text('-')
+.text('-')
+.text('-')
+.moveDown()
+.text('ANTECEDENTS UTILES : CPIschemique sévére avec FEVG abaissée.')
+.text('-')
+.text('-')
+.text('-')
+.moveDown()
+.text('CIRCONSTANCES PARTICULIERES : ')
+.text('-')
+.text('-')
+.text('-')
+.moveDown(2)
+.fontSize(8)
+.text('Informations issues du logiciel Osiris', { align: 'center'});
+//
 doc.end();
