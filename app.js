@@ -76,48 +76,75 @@ db.once('open', function callback() {
     app.post('/postprescriptionhl7', function(req, res) {
         //forward to mirth
         console.log(req.text);
-       var message = parser.parse(req.text);
-console.log(message.query('PID|5[0]'));
-console.log(message.query('PID|5[1]'));
-        res.send(200);
-    });
-    //used to receive the TXT prescription from mirth
-    app.post('/postprescriptiontxt', function(req, res) {
-        console.log(req.body);
-        // Need to escape " in mirth in case
-        res.send(200);
-        // create PDF a document
+        var message = parser.parse(req.text);
+        var hl7Json = message.translate({
+            SendingAPP: "MSH|3^1",
+            SendingFacility: "MSH|4^0",
+            PatientID: "PID|3^0",
+            PatientFname: "PID|5^1",
+            PatientLname: "PID|5^0",
+            PatientBname: "PID|6^0",
+            PatientDOB: "PID|7^0",
+            PatientSex: "PID|8^0",
+            PatientStreet: "PID|11^0",
+            PatientPostalCode: "PID|11^2",
+            PatientCity: "PID|11^4",
+            PatientPhone: "PID|13^0",
+            Pointofcare: "PV1|3^0",
+            PatientRoom: "PV1|3^1",
+            Facility: "PV1|3^3",
+            PatientVisitNumber: "PV1|19^0",
+            PatientAdmitTimeDate: "PV1|44^0",
+            DoctorLname: "ORC|12^1",
+            DoctorFname: "ORC|12^2",
+            DoctorRPPS: "ORC|12^0",
+            PrescriptionDateTime: "ORC|15^0",
+            PrescriptionText: "ORC|16^1",
+            FacilityStreetAdress: "ORC|22^0",
+            FacilityCity: "ORC|22^2",
+            FacilityPostalCode: "ORC|22^4",
+            FacilityPhoneNumber: "ORC|23^0",
+            PrescriptionExam: "OBR|4^1"
+        });
+
+        console.log(hl7Json);
+        
         var patientgender,
         borngender;
-        if (req.body.PatientSex == "M") {
+        if (hl7Json.PatientSex == "M") {
             patientgender = "M.";
             borngender = "Né";
         }
-        else if (req.body.PatientSex == "F") {
+        else if (hl7Json.PatientSex == "F") {
             patientgender = "Mme.";
             borngender = "Née";
         }
-        var doc = new PDFDocument();
         
-        doc.fontSize(14).text(req.body.SendingFacility).fontSize(10).text(req.body.FacilityStreetAdress).text(req.body.FacilityPostalCode + " " + req.body.FacilityCity).text(req.body.FacilityPhoneNumber).text('————————————————').fontSize(14).text('Dr ' + req.body.DoctorFname + " " + req.body.DoctorLname).fontSize(10).text('N° RPPS : ' + req.body.DoctorRPPS).fontSize(18).text(patientgender + " " + req.body.PatientFname + " " + req.body.PatientLname, {
+        
+        var doc = new PDFDocument();
+
+        doc.fontSize(14).text(hl7Json.SendingFacility).fontSize(10).text(hl7Json.FacilityStreetAdress).text(hl7Json.FacilityPostalCode + " " + hl7Json.FacilityCity).text(hl7Json.FacilityPhoneNumber).text('————————————————').fontSize(14).text('Dr ' + hl7Json.DoctorFname + " " + hl7Json.DoctorLname).fontSize(10).text('N° RPPS : ' + hl7Json.DoctorRPPS).fontSize(18).text(patientgender + " " + hl7Json.PatientFname + " " + hl7Json.PatientLname, {
             align: 'right'
-        }).fontSize(12).text(borngender+' le ' + req.body.PatientDOB, {
+        }).fontSize(12).text(borngender + ' le ' + hl7Json.PatientDOB, {
             align: 'right'
-        }).text(req.body.Facility + " - Chambre " + req.body.PatientRoom, {
+        }).text(hl7Json.Facility + " - Chambre " + hl7Json.PatientRoom, {
             align: 'right'
-        }).text('Séjour n° ' + req.body.PatientVisitNumber, {
+        }).text('Séjour n° ' + hl7Json.PatientVisitNumber, {
             align: 'right'
-        }).fontSize(10).moveDown().text(req.body.PatientStreet, {
+        }).fontSize(10).moveDown().text(hl7Json.PatientStreet, {
             align: 'right'
-        }).text(req.body.PatientPostalCode + " " + req.body.PatientCity, {
+        }).text(hl7Json.PatientPostalCode + " " + hl7Json.PatientCity, {
             align: 'right'
-        }).text(req.body.PatientPhone, {
+        }).text(hl7Json.PatientPhone, {
             align: 'right'
-        }).moveDown(2).fontSize(12).text('Le, ' + req.body.PrescriptionDateTime).moveDown().fontSize(12).moveDown().text(req.body.PrescriptionText).moveDown(2).fontSize(8).text('Informations issues du logiciel ' + req.body.SendingAPP, {
+        }).moveDown(2).fontSize(12).text('Le, ' + hl7Json.PrescriptionDateTime).moveDown().fontSize(12).moveDown().text(hl7Json.PrescriptionText).moveDown(2).fontSize(8).text('Informations issues du logiciel ' + hl7Json.SendingAPP, {
             align: 'center'
         });
         doc.end();
         doc.pipe(fs.createWriteStream('./uploads/file.pdf'));
-
+        
+        
+        res.send(200);
     });
+
 });
