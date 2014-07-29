@@ -2,7 +2,17 @@
     "run": {
         "@path": "/.c9/runners",
         "configs": {
-            "json()": {},
+            "json()": {
+                "Defaut": {
+                    "runner": "Node.js (default)",
+                    "command": "app.js",
+                    "debug": true,
+                    "name": "Defaut",
+                    "env": {
+                        "MONGOCON": "\"mongodb://cloud9:ZSTqSa04E7Lp3ao@kahana.mongohq.com:10005/app26722556\""
+                    }
+                }
+            },
             "@inited": "true"
         }
     },
@@ -25,7 +35,7 @@
     },
     "build": {
         "@path": "/.c9/builders",
-        "@saveall": "true",
+        "@saveall": true,
         "@builder": "auto"
     },
     "debug": {
