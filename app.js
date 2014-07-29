@@ -7,7 +7,6 @@ var express = require("express"),
     bodyParser = require('body-parser'),
     PDFDocument = require('pdfkit');
     
-    
 //Use for upload file
 app.use(multer({
     dest: './uploads/'
@@ -16,6 +15,9 @@ app.use(multer({
 app.use(bodyParser.urlencoded({
     extended: true
 }));
+app.use(bodyParser.json());
+
+
 //add support for text/plain
 app.use(function(req, res, next) {
     if (req.is('text/*')) {
@@ -32,8 +34,6 @@ app.use(function(req, res, next) {
 });
 process.env.MONGOCON = "mongodb://cloud9:ZSTqSa04E7Lp3ao@kahana.mongohq.com:10005/app26722556";
 app.listen(process.env.PORT, process.env.IP);
-
-
 
 //Start Mongoose
 mongoose.connect(process.env.MONGOCON);
@@ -81,11 +81,11 @@ db.once('open', function callback() {
             }
         });
         res.send(200);
-        
     });
     //used to receive the TXT prescription from mirth
     app.post('/postprescriptiontxt', function(req, res) {
-        console.log(req.text);
+        console.log(req.body);
+        // Need to escape " in mirth in case
         res.send(200);
     });
 });
@@ -147,4 +147,5 @@ doc.fontSize(14)
 .fontSize(8)
 .text('Informations issues du logiciel Osiris', { align: 'center'});
 //
+
 doc.end();
