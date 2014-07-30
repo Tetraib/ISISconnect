@@ -1,13 +1,14 @@
 var express = require("express"),
-    app = express(),
+    fs = require('fs'),
+    parser = require('L7'),
     mongoose = require('mongoose'),
-    db = mongoose.connection,
     request = require("request"),
     multer = require('multer'),
     bodyParser = require('body-parser'),
     PDFDocument = require('pdfkit'),
-    fs = require('fs'),
-    parser = require('L7');
+    app = express(),
+    db = mongoose.connection;
+
 
 //Use for upload file
 app.use(multer({
@@ -18,7 +19,6 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
-
 
 //add support for text/plain
 app.use(function(req, res, next) {
@@ -78,6 +78,7 @@ db.once('open', function callback() {
             borngender,
             doc = new PDFDocument(),
             hl7Json = hl7Message.translate({
+                MessageDate:"MSH|7^0",
                 SendingAPP: "MSH|3^1",
                 SendingFacility: "MSH|4^0",
                 PatientID: "PID|3^0",
@@ -87,8 +88,8 @@ db.once('open', function callback() {
                 PatientDOB: "PID|7^0",
                 PatientSex: "PID|8^0",
                 PatientStreet: "PID|11^0",
-                PatientPostalCode: "PID|11^2",
-                PatientCity: "PID|11^4",
+                PatientPostalCode: "PID|11^4",
+                PatientCity: "PID|11^2",
                 PatientPhone: "PID|13^0",
                 Pointofcare: "PV1|3^0",
                 PatientRoom: "PV1|3^1",
@@ -97,17 +98,17 @@ db.once('open', function callback() {
                 PatientAdmitTimeDate: "PV1|44^0",
                 DoctorLname: "ORC|12^1",
                 DoctorFname: "ORC|12^2",
-                DoctorRPPS: "ORC|12^0",
+                DoctorRPPS: "ORC|12^8",
                 PrescriptionDateTime: "ORC|15^0",
                 PrescriptionText: "ORC|16^1",
                 FacilityStreetAdress: "ORC|22^0",
                 FacilityCity: "ORC|22^2",
                 FacilityPostalCode: "ORC|22^4",
                 FacilityPhoneNumber: "ORC|23^0",
+                ServicePhoneNumber: "ORC|24^0",
                 PrescriptionExam: "OBR|4^1"
             });
-
-
+console.log(hl7Json);
         if (hl7Json.PatientSex == "M") {
             patientgender = "M.";
             borngender = "Né";
@@ -117,7 +118,7 @@ db.once('open', function callback() {
             borngender = "Née";
         }
 
-        doc.fontSize(14).text(hl7Json.SendingFacility).fontSize(10).text(hl7Json.FacilityStreetAdress).text(hl7Json.FacilityPostalCode + " " + hl7Json.FacilityCity).text(hl7Json.FacilityPhoneNumber).text('————————————————').fontSize(14).text('Dr ' + hl7Json.DoctorFname + " " + hl7Json.DoctorLname).fontSize(10).text('N° RPPS : ' + hl7Json.DoctorRPPS).fontSize(18).text(patientgender + " " + hl7Json.PatientFname + " " + hl7Json.PatientLname, {
+        doc.fontSize(14).text(hl7Json.SendingFacility).fontSize(10).text(hl7Json.FacilityStreetAdress).text(hl7Json.FacilityPostalCode + " " + hl7Json.FacilityCity).text(hl7Json.FacilityPhoneNumber).text('————————————————').fontSize(14).text('Dr ' + hl7Json.DoctorFname + " " + hl7Json.DoctorLname).fontSize(10).text('N° RPPS : ' + hl7Json.DoctorRPPS.match(/~([^ ]*)/)[1]).text(hl7Json.ServicePhoneNumber).fontSize(18).text(patientgender + " " + hl7Json.PatientFname + " " + hl7Json.PatientLname, {
             align: 'right'
         }).fontSize(12).text(borngender + ' le ' + hl7Json.PatientDOB, {
             align: 'right'
@@ -131,13 +132,14 @@ db.once('open', function callback() {
             align: 'right'
         }).text(hl7Json.PatientPhone, {
             align: 'right'
-        }).moveDown(2).fontSize(12).text('Le, ' + hl7Json.PrescriptionDateTime).moveDown().fontSize(12).moveDown().text(hl7Json.PrescriptionText).moveDown(2).fontSize(8).text('Informations issues du logiciel ' + hl7Json.SendingAPP, {
+        }).moveDown().fontSize(12).text('Le, ' + hl7Json.PrescriptionDateTime).moveDown().fontSize(14).text(hl7Json.PrescriptionExam, {
+            align: 'center'
+        }).fontSize(12).moveDown().text(hl7Json.PrescriptionText.replace(/\\.br\\/g, "\n")).moveDown(2).fontSize(8).text('Informations issues du logiciel ' + hl7Json.SendingAPP, {
             align: 'center'
         });
-        
-        doc.end();
-        doc.pipe(fs.createWriteStream('./uploads/file.pdf'));
 
+        doc.end();
+        doc.pipe(fs.createWriteStream('./uploads/'+hl7Json.PatientFname+'_'+hl7Json.PatientLname+'_'+hl7Json.PatientDOB+'_'+hl7Json.MessageDate+'_'+Date.now()+'.pdf'));
         res.send(200);
     });
 
