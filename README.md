@@ -16,3 +16,8 @@ curl -H "exam_infos":"\"20140219131841\",\"18774\",\"TEST\",\"Osiris\",\"1932041
 ```
 curl -H "Content-Type: text/plain" --data-binary "@<file>" <host>/postprescriptionhl7
 ```
+
+ISIS_HL7_SENDER
+--------------
+Requiere iconv and curl
+Can be used with cygwin on windows
