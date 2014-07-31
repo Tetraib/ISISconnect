@@ -8,8 +8,6 @@ var express = require("express"),
     PDFDocument = require('pdfkit'),
     app = express(),
     db = mongoose.connection;
-
-
 //Use for upload file
 app.use(multer({
     dest: './uploads/'
@@ -19,7 +17,6 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
-
 //add support for text/plain
 app.use(function(req, res, next) {
     if (req.is('text/*')) {
@@ -35,7 +32,6 @@ app.use(function(req, res, next) {
     }
 });
 app.listen(process.env.PORT, process.env.IP);
-
 //Start Mongoose
 mongoose.connect(process.env.MONGOCON);
 //DB open function
@@ -52,7 +48,6 @@ db.once('open', function callback() {
         // console.log(req.files);
         // Forward to mirth
         console.log(req.headers.exam_infos);
-
         request.post({
             url: 'http://146.148.3.248:80/crtxt/',
             body: req.headers.exam_infos,
@@ -64,13 +59,11 @@ db.once('open', function callback() {
         });
         res.send(200);
     });
-
     app.get('/hello', function(req, res) {
         //set the download name
         res.setHeader('Content-disposition', 'attachment; filename=dramaticpenguin.txt');
         // Send the datas ad a file
     });
-
     //use to receive the HL7 prescription
     app.post('/postprescriptionhl7', function(req, res) {
         var hl7Message = parser.parse(req.text),
@@ -117,7 +110,6 @@ console.log(hl7Json);
             patientgender = "Mme.";
             borngender = "Née";
         }
-
         doc.fontSize(14).text(hl7Json.SendingFacility).fontSize(10).text(hl7Json.FacilityStreetAdress).text(hl7Json.FacilityPostalCode + " " + hl7Json.FacilityCity).text(hl7Json.FacilityPhoneNumber).text('————————————————').fontSize(14).text('Dr ' + hl7Json.DoctorFname + " " + hl7Json.DoctorLname).fontSize(10).text('N° RPPS : ' + hl7Json.DoctorRPPS.match(/~([^ ]*)/)[1]).text(hl7Json.ServicePhoneNumber).fontSize(18).text(patientgender + " " + hl7Json.PatientFname + " " + hl7Json.PatientLname, {
             align: 'right'
         }).fontSize(12).text(borngender + ' le ' + hl7Json.PatientDOB, {
@@ -137,10 +129,8 @@ console.log(hl7Json);
         }).fontSize(12).moveDown().text(hl7Json.PrescriptionText.replace(/\\.br\\/g, "\n")).moveDown(2).fontSize(8).text('Informations issues du logiciel ' + hl7Json.SendingAPP, {
             align: 'center'
         });
-
         doc.end();
         doc.pipe(fs.createWriteStream('./uploads/'+hl7Json.PatientFname+'_'+hl7Json.PatientLname+'_'+hl7Json.PatientDOB+'_'+hl7Json.MessageDate+'_'+Date.now()+'.pdf'));
         res.send(200);
     });
-
 });
