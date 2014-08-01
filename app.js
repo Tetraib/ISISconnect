@@ -101,7 +101,6 @@ db.once('open', function callback() {
                 ServicePhoneNumber: "ORC|24^0",
                 PrescriptionExam: "OBR|4^1"
             });
-console.log(hl7Json);
         if (hl7Json.PatientSex == "M") {
             patientgender = "M.";
             borngender = "Né";

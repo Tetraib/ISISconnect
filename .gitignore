@@ -1,6 +1,0 @@
-#ignoring files for Git
-node_modules/
-.c9/
-.git/
-_HELP
-private.js
