@@ -133,3 +133,12 @@ db.once('open', function callback() {
         res.send(200);
     });
 });
+
+
+var prescrihl7 = "H|^~\\&|||MEDISPHINX||ORU|||OSIRIS||P|H2.3|${EXAMDATETIME}\n\
+P|1|${PATID}|||${LNAME}^${FNAME}||${DOB}||||||\n\
+OBX|1|FIC|CR^${EXAMTITLE} du ${EXAMDATE}||${DOCNAME}^PDF|||||||||||\n\
+OBX|1|CE|IMAGE_LINK^${EXAMTITLE}^L||${EXAMID}^http://10.0.0.27:8080/isispacs/home.php?study=${EXAMID}^L|||||||||${EXAMDATE}||MCO^OSIRIS\n\
+L|||1|4|";
+
+console.log(prescrihl7);
