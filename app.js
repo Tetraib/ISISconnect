@@ -8,6 +8,7 @@ var express = require("express"),
     PDFDocument = require('pdfkit'),
     app = express(),
     db = mongoose.connection;
+    var hello;
 //Use for upload file
 app.use(multer({
     dest: './uploads/'
@@ -57,12 +58,35 @@ db.once('open', function callback() {
         }, function(error, response, body) {
             //HERE code to manage post errors
         });
-        res.send(200);
     });
     app.get('/hello', function(req, res) {
-        //set the download name
-        res.setHeader('Content-disposition', 'attachment; filename=dramaticpenguin.txt');
+        
+
+        // res.sendfile("./uploads/Aline_HAINAUT_19210314_20140723141639_1407160479194.pdf");
+        // res.sendfile("./uploads/Darifa_AZARKAN_19470101_20140721163028_1407160478670.pdf");
         // Send the datas ad a file
+        res.download("./uploads/Aline_HAINAUT_19210314_20140723141639_1407160479194.pdf", function(err) {
+            if (err) {
+                // handle error, keep in mind the response may be partially-sent
+                // so check res.headersSent
+            }
+            else {}
+        });
+        res.download("./uploads/Darifa_AZARKAN_19470101_20140721163028_1407160478670.pdf", function(err) {
+            if (err) {
+                // handle error, keep in mind the response may be partially-sent
+                // so check res.headersSent
+            }
+            else {
+
+            }
+        });
+    });
+    app.get('/test', function(req, res) {
+        
+
+        hello.pipe(res);
+       
     });
     //use to receive the HL7 prescription
     app.post('/postprescriptionhl7', function(req, res) {
@@ -71,7 +95,7 @@ db.once('open', function callback() {
             borngender,
             doc = new PDFDocument(),
             hl7Json = hl7Message.translate({
-                MessageDate:"MSH|7^0",
+                MessageDate: "MSH|7^0",
                 SendingAPP: "MSH|3^1",
                 SendingFacility: "MSH|4^0",
                 PatientID: "PID|3^0",
@@ -129,16 +153,27 @@ db.once('open', function callback() {
             align: 'center'
         });
         doc.end();
-        doc.pipe(fs.createWriteStream('./uploads/'+hl7Json.PatientFname+'_'+hl7Json.PatientLname+'_'+hl7Json.PatientDOB+'_'+hl7Json.MessageDate+'_'+Date.now()+'.pdf'));
+        hello = doc;
+        // doc.pipe(fs.createWriteStream('./uploads/' + hl7Json.PatientFname + '_' + hl7Json.PatientLname + '_' + hl7Json.PatientDOB + '_' + hl7Json.MessageDate + '_' + Date.now() + '.pdf'));
         res.send(200);
     });
 });
+var hprimdata = {
+    EXAMDATETIME: "",
+    PATID: "1234",
+    LNAME: "MCtest",
+    FNAME: "John",
+    DOB: "19750609",
+    EXAMTITLE: "Echo",
+    EXAMDATE: "20140609",
+    DOCNAME: "14545486.pdf",
+    EXAMID: "15646"
+};
 
-
-var prescrihl7 = "H|^~\\&|||MEDISPHINX||ORU|||OSIRIS||P|H2.3|${EXAMDATETIME}\n\
-P|1|${PATID}|||${LNAME}^${FNAME}||${DOB}||||||\n\
-OBX|1|FIC|CR^${EXAMTITLE} du ${EXAMDATE}||${DOCNAME}^PDF|||||||||||\n\
-OBX|1|CE|IMAGE_LINK^${EXAMTITLE}^L||${EXAMID}^http://10.0.0.27:8080/isispacs/home.php?study=${EXAMID}^L|||||||||${EXAMDATE}||MCO^OSIRIS\n\
+var crhprim = "H|^~\\&|||MEDISPHINX||ORU|||OSIRIS||P|H2.3|" + hprimdata.EXAMDATETIME + "\r\n\
+P|1|" + hprimdata.PATID + "|||" + hprimdata.LNAME + "^" + hprimdata.FNAME + "||" + hprimdata.DOB + "||||||\r\n\
+OBX|1|FIC|CR^" + hprimdata.EXAMTITLE + " du " + hprimdata.EXAMDATE + "||" + hprimdata.DOCNAME + "^PDF|||||||||||\r\n\
+OBX|1|CE|IMAGE_LINK^" + hprimdata.EXAMTITLE + "^L||" + hprimdata.EXAMID + "^http://10.0.0.27:8080/isispacs/home.php?study=" + hprimdata.EXAMID + "^L|||||||||" + hprimdata.EXAMDATE + "||MCO^OSIRIS\r\n\
 L|||1|4|";
 
-console.log(prescrihl7);
+console.log(crhprim);
