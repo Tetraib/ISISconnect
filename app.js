@@ -8,7 +8,7 @@ var express = require("express"),
     PDFDocument = require('pdfkit'),
     app = express(),
     db = mongoose.connection;
-    var hello;
+
 //Use for upload file
 app.use(multer({
     dest: './uploads/'
@@ -59,41 +59,11 @@ db.once('open', function callback() {
             //HERE code to manage post errors
         });
     });
-    app.get('/hello', function(req, res) {
-        
 
-        // res.sendfile("./uploads/Aline_HAINAUT_19210314_20140723141639_1407160479194.pdf");
-        // res.sendfile("./uploads/Darifa_AZARKAN_19470101_20140721163028_1407160478670.pdf");
-        // Send the datas ad a file
-        res.download("./uploads/Aline_HAINAUT_19210314_20140723141639_1407160479194.pdf", function(err) {
-            if (err) {
-                // handle error, keep in mind the response may be partially-sent
-                // so check res.headersSent
-            }
-            else {}
-        });
-        res.download("./uploads/Darifa_AZARKAN_19470101_20140721163028_1407160478670.pdf", function(err) {
-            if (err) {
-                // handle error, keep in mind the response may be partially-sent
-                // so check res.headersSent
-            }
-            else {
 
-            }
-        });
-    });
-    app.get('/test', function(req, res) {
-        
-
-        hello.pipe(res);
-       
-    });
     //use to receive the HL7 prescription
     app.post('/postprescriptionhl7', function(req, res) {
         var hl7Message = parser.parse(req.text),
-            patientgender,
-            borngender,
-            doc = new PDFDocument(),
             hl7Json = hl7Message.translate({
                 MessageDate: "MSH|7^0",
                 SendingAPP: "MSH|3^1",
@@ -125,6 +95,46 @@ db.once('open', function callback() {
                 ServicePhoneNumber: "ORC|24^0",
                 PrescriptionExam: "OBR|4^1"
             });
+
+        res.send(200);
+    });
+    app.get('/getprescription', function(req, res) {
+        var doc = new PDFDocument(),
+            PRESCRITEXT,
+            RPPS,
+            patientgender,
+            borngender,
+            hl7Json = {
+                MessageDate: " ",
+                SendingAPP: " ",
+                SendingFacility: " ",
+                PatientID: " ",
+                PatientFname: " ",
+                PatientLname: " ",
+                PatientBname: " ",
+                PatientDOB: " ",
+                PatientSex: "M",
+                PatientStreet: " ",
+                PatientPostalCode: " ",
+                PatientCity: " ",
+                PatientPhone: " ",
+                Pointofcare: " ",
+                PatientRoom: " ",
+                Facility: " ",
+                PatientVisitNumber: " ",
+                PatientAdmitTimeDate: " ",
+                DoctorLname: " ",
+                DoctorFname: " ",
+                DoctorRPPS: "123456789",
+                PrescriptionDateTime: " ",
+                PrescriptionText: "",
+                FacilityStreetAdress: " ",
+                FacilityCity: " ",
+                FacilityPostalCode: " ",
+                FacilityPhoneNumber: " ",
+                ServicePhoneNumber: " ",
+                PrescriptionExam: " "
+            };
         if (hl7Json.PatientSex == "M") {
             patientgender = "M.";
             borngender = "Né";
@@ -133,7 +143,16 @@ db.once('open', function callback() {
             patientgender = "Mme.";
             borngender = "Née";
         }
-        doc.fontSize(14).text(hl7Json.SendingFacility).fontSize(10).text(hl7Json.FacilityStreetAdress).text(hl7Json.FacilityPostalCode + " " + hl7Json.FacilityCity).text(hl7Json.FacilityPhoneNumber).text('————————————————').fontSize(14).text('Dr ' + hl7Json.DoctorFname + " " + hl7Json.DoctorLname).fontSize(10).text('N° RPPS : ' + hl7Json.DoctorRPPS.match(/~([^ ]*)/)[1]).text(hl7Json.ServicePhoneNumber).fontSize(18).text(patientgender + " " + hl7Json.PatientFname + " " + hl7Json.PatientLname, {
+
+        if (hl7Json.DoctorRPPS.search("~") > 0) {
+            RPPS = hl7Json.DoctorRPPS.match(/~([^ ]*)/)[1];
+        }else{
+            RPPS = hl7Json.DoctorRPPS;
+        }
+        PRESCRITEXT = hl7Json.PrescriptionText.replace(/\\.br\\/g, "\n");
+
+
+        doc.fontSize(14).text(hl7Json.SendingFacility).fontSize(10).text(hl7Json.FacilityStreetAdress).text(hl7Json.FacilityPostalCode + " " + hl7Json.FacilityCity).text(hl7Json.FacilityPhoneNumber).text('————————————————').fontSize(14).text('Dr ' + hl7Json.DoctorFname + " " + hl7Json.DoctorLname).fontSize(10).text('N° RPPS : ' + RPPS).text(hl7Json.ServicePhoneNumber).fontSize(18).text(patientgender + " " + hl7Json.PatientFname + " " + hl7Json.PatientLname, {
             align: 'right'
         }).fontSize(12).text(borngender + ' le ' + hl7Json.PatientDOB, {
             align: 'right'
@@ -149,31 +168,39 @@ db.once('open', function callback() {
             align: 'right'
         }).moveDown().fontSize(12).text('Le, ' + hl7Json.PrescriptionDateTime).moveDown().fontSize(14).text(hl7Json.PrescriptionExam, {
             align: 'center'
-        }).fontSize(12).moveDown().text(hl7Json.PrescriptionText.replace(/\\.br\\/g, "\n")).moveDown(2).fontSize(8).text('Informations issues du logiciel ' + hl7Json.SendingAPP, {
+        }).fontSize(12).moveDown().text(PRESCRITEXT).moveDown(2).fontSize(8).text('Informations issues du logiciel ' + hl7Json.SendingAPP, {
             align: 'center'
         });
         doc.end();
-        hello = doc;
-        // doc.pipe(fs.createWriteStream('./uploads/' + hl7Json.PatientFname + '_' + hl7Json.PatientLname + '_' + hl7Json.PatientDOB + '_' + hl7Json.MessageDate + '_' + Date.now() + '.pdf'));
-        res.send(200);
+
+        res.setHeader('Content-disposition', 'attachment; filename=testhellohello.pdf');
+        // res.setHeader('Content-disposition', 'attachment; filename='+hl7Json.PatientFname + '_' + hl7Json.PatientLname + '_' + hl7Json.PatientDOB + '_' + hl7Json.MessageDate + '_' + Date.now() + '.pdf');
+
+        res.setHeader('Content-type', 'application/pdf');
+        doc.pipe(res);
+
     });
 });
-var hprimdata = {
-    EXAMDATETIME: "",
-    PATID: "1234",
-    LNAME: "MCtest",
-    FNAME: "John",
-    DOB: "19750609",
-    EXAMTITLE: "Echo",
-    EXAMDATE: "20140609",
-    DOCNAME: "14545486.pdf",
-    EXAMID: "15646"
-};
 
-var crhprim = "H|^~\\&|||MEDISPHINX||ORU|||OSIRIS||P|H2.3|" + hprimdata.EXAMDATETIME + "\r\n\
-P|1|" + hprimdata.PATID + "|||" + hprimdata.LNAME + "^" + hprimdata.FNAME + "||" + hprimdata.DOB + "||||||\r\n\
-OBX|1|FIC|CR^" + hprimdata.EXAMTITLE + " du " + hprimdata.EXAMDATE + "||" + hprimdata.DOCNAME + "^PDF|||||||||||\r\n\
-OBX|1|CE|IMAGE_LINK^" + hprimdata.EXAMTITLE + "^L||" + hprimdata.EXAMID + "^http://10.0.0.27:8080/isispacs/home.php?study=" + hprimdata.EXAMID + "^L|||||||||" + hprimdata.EXAMDATE + "||MCO^OSIRIS\r\n\
-L|||1|4|";
 
-console.log(crhprim);
+
+// for test only :
+// var hprimdata = {
+//     EXAMDATETIME: "",
+//     PATID: "1234",
+//     LNAME: "MCtest",
+//     FNAME: "John",
+//     DOB: "19750609",
+//     EXAMTITLE: "Echo",
+//     EXAMDATE: "20140609",
+//     DOCNAME: "14545486.pdf",
+//     EXAMID: "15646"
+// };
+
+// var crhprim = "H|^~\\&|||MEDISPHINX||ORU|||OSIRIS||P|H2.3|" + hprimdata.EXAMDATETIME + "\r\n\
+// P|1|" + hprimdata.PATID + "|||" + hprimdata.LNAME + "^" + hprimdata.FNAME + "||" + hprimdata.DOB + "||||||\r\n\
+// OBX|1|FIC|CR^" + hprimdata.EXAMTITLE + " du " + hprimdata.EXAMDATE + "||" + hprimdata.DOCNAME + "^PDF|||||||||||\r\n\
+// OBX|1|CE|IMAGE_LINK^" + hprimdata.EXAMTITLE + "^L||" + hprimdata.EXAMID + "^http://10.0.0.27:8080/isispacs/home.php?study=" + hprimdata.EXAMID + "^L|||||||||" + hprimdata.EXAMDATE + "||MCO^OSIRIS\r\n\
+// L|||1|4|";
+
+// console.log(crhprim);
