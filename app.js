@@ -1,8 +1,6 @@
 var express = require("express"),
-    fs = require('fs'),
     parser = require('L7'),
     mongoose = require('mongoose'),
-    request = require("request"),
     multer = require('multer'),
     bodyParser = require('body-parser'),
     PDFDocument = require('pdfkit'),
@@ -49,15 +47,7 @@ db.once('open', function callback() {
         // console.log(req.files);
         // Forward to mirth
         console.log(req.headers.exam_infos);
-        request.post({
-            url: 'http://146.148.3.248:80/crtxt/',
-            body: req.headers.exam_infos,
-            headers: {
-                'Content-Type': 'text/plain'
-            }
-        }, function(error, response, body) {
-            //HERE code to manage post errors
-        });
+       
     });
 
 

@@ -10,7 +10,6 @@
     "passport":"0.x.x",
     "passport-http":"0.x.x",
     "pdfkit":"0.x.x",
-    "request":"2.x.x",
     "multer":"0.x.X",
     "body-parser":"1.X.X",
     "encoding":"0.x.x",
