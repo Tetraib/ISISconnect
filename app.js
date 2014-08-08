@@ -16,6 +16,7 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
+//
 //add support for text/plain
 app.use(function(req, res, next) {
     if (req.is('text/*')) {
@@ -31,12 +32,48 @@ app.use(function(req, res, next) {
     }
 });
 app.listen(process.env.PORT, process.env.IP);
+//
+//
 //Start Mongoose
 mongoose.connect(process.env.MONGOCON);
 //DB open function
 db.on('error', console.error.bind(console, 'mongodb connection error:'));
 db.once('open', function callback() {
     console.log("DB Open");
+    var prescriptionSchema = mongoose.Schema({
+        MessageDate: String,
+        SendingAPP: String,
+        SendingFacility: String,
+        PatientID: String,
+        PatientFname: String,
+        PatientLname: String,
+        PatientBname: String,
+        PatientDOB: String,
+        PatientSex: String,
+        PatientStreet: String,
+        PatientPostalCode: String,
+        PatientCity: String,
+        PatientPhone: String,
+        Pointofcare: String,
+        PatientRoom: String,
+        Facility: String,
+        PatientVisitNumber: String,
+        PatientAdmitTimeDate: String,
+        DoctorLname: String,
+        DoctorFname: String,
+        DoctorRPPS: String,
+        PrescriptionDateTime: String,
+        PrescriptionText: String,
+        FacilityStreetAdress: String,
+        FacilityCity: String,
+        FacilityPostalCode: String,
+        FacilityPhoneNumber: String,
+        ServicePhoneNumber: String,
+        PrescriptionExam: String,
+        Downloaded: Boolean
+    }),
+        prescription = mongoose.model('prescription', prescriptionSchema);
+    //
     //use to get the hl7 from mirth
     app.post('/posthl7', function(req, res) {
         console.log(req.text);
@@ -47,14 +84,12 @@ db.once('open', function callback() {
         // console.log(req.files);
         // Forward to mirth
         console.log(req.headers.exam_infos);
-       
+
     });
-
-
     //use to receive the HL7 prescription
     app.post('/postprescriptionhl7', function(req, res) {
         var hl7Message = parser.parse(req.text),
-            hl7Json = hl7Message.translate({
+            createprescription = new prescription(hl7Message.translate({
                 MessageDate: "MSH|7^0",
                 SendingAPP: "MSH|3^1",
                 SendingFacility: "MSH|4^0",
@@ -84,10 +119,19 @@ db.once('open', function callback() {
                 FacilityPhoneNumber: "ORC|23^0",
                 ServicePhoneNumber: "ORC|24^0",
                 PrescriptionExam: "OBR|4^1"
-            });
-
-        res.send(200);
+            }));
+        //
+        createprescription.Downloaded = false;
+        createprescription.save(function(err) {
+            if (err) {
+                return console.log(err);
+            }
+            else {
+                res.send(200);
+            }
+        });
     });
+    //
     app.get('/getprescription', function(req, res) {
         var doc = new PDFDocument(),
             PRESCRITEXT,
@@ -136,7 +180,8 @@ db.once('open', function callback() {
 
         if (hl7Json.DoctorRPPS.search("~") > 0) {
             RPPS = hl7Json.DoctorRPPS.match(/~([^ ]*)/)[1];
-        }else{
+        }
+        else {
             RPPS = hl7Json.DoctorRPPS;
         }
         PRESCRITEXT = hl7Json.PrescriptionText.replace(/\\.br\\/g, "\n");
@@ -171,8 +216,6 @@ db.once('open', function callback() {
 
     });
 });
-
-
 
 // for test only :
 // var hprimdata = {
