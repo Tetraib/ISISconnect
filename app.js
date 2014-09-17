@@ -41,37 +41,37 @@ db.on('error', console.error.bind(console, 'mongodb connection error:'));
 db.once('open', function callback() {
     console.log("DB Open");
     var prescriptionSchema = mongoose.Schema({
-        MessageDate: String,
-        SendingAPP: String,
-        SendingFacility: String,
-        PatientID: String,
-        PatientFname: String,
-        PatientLname: String,
-        PatientBname: String,
-        PatientDOB: String,
-        PatientSex: String,
-        PatientStreet: String,
-        PatientPostalCode: String,
-        PatientCity: String,
-        PatientPhone: String,
-        Pointofcare: String,
-        PatientRoom: String,
-        Facility: String,
-        PatientVisitNumber: String,
-        PatientAdmitTimeDate: String,
-        DoctorLname: String,
-        DoctorFname: String,
-        DoctorRPPS: String,
-        PrescriptionDateTime: String,
-        PrescriptionText: String,
-        FacilityStreetAdress: String,
-        FacilityCity: String,
-        FacilityPostalCode: String,
-        FacilityPhoneNumber: String,
-        ServicePhoneNumber: String,
-        PrescriptionExam: String,
-        Downloaded: Boolean
-    }),
+            MessageDate: String,
+            SendingAPP: String,
+            SendingFacility: String,
+            PatientID: String,
+            PatientFname: String,
+            PatientLname: String,
+            PatientBname: String,
+            PatientDOB: String,
+            PatientSex: String,
+            PatientStreet: String,
+            PatientPostalCode: String,
+            PatientCity: String,
+            PatientPhone: String,
+            Pointofcare: String,
+            PatientRoom: String,
+            Facility: String,
+            PatientVisitNumber: String,
+            PatientAdmitTimeDate: String,
+            DoctorLname: String,
+            DoctorFname: String,
+            DoctorRPPS: String,
+            PrescriptionDateTime: String,
+            PrescriptionText: String,
+            FacilityStreetAdress: String,
+            FacilityCity: String,
+            FacilityPostalCode: String,
+            FacilityPhoneNumber: String,
+            ServicePhoneNumber: String,
+            PrescriptionExam: String,
+            Downloaded: Boolean
+        }),
         prescription = mongoose.model('prescription', prescriptionSchema);
     //
     //use to get the hl7 from mirth
@@ -207,7 +207,6 @@ db.once('open', function callback() {
             align: 'center'
         });
         doc.end();
-
         res.setHeader('Content-disposition', 'attachment; filename=testhellohello.pdf');
         // res.setHeader('Content-disposition', 'attachment; filename='+hl7Json.PatientFname + '_' + hl7Json.PatientLname + '_' + hl7Json.PatientDOB + '_' + hl7Json.MessageDate + '_' + Date.now() + '.pdf');
 
@@ -216,6 +215,104 @@ db.once('open', function callback() {
 
     });
 });
+
+var zipstream = require('zipstream');
+var fs = require('fs');
+app.get('/test', function(req, res) {
+    var doc = new PDFDocument(),
+        PRESCRITEXT,
+        RPPS,
+        patientgender,
+        borngender,
+        hl7Json = {
+            MessageDate: " ",
+            SendingAPP: " ",
+            SendingFacility: " ",
+            PatientID: " ",
+            PatientFname: " ",
+            PatientLname: " ",
+            PatientBname: " ",
+            PatientDOB: " ",
+            PatientSex: "M",
+            PatientStreet: " ",
+            PatientPostalCode: " ",
+            PatientCity: " ",
+            PatientPhone: " ",
+            Pointofcare: " ",
+            PatientRoom: " ",
+            Facility: " ",
+            PatientVisitNumber: " ",
+            PatientAdmitTimeDate: " ",
+            DoctorLname: " ",
+            DoctorFname: " ",
+            DoctorRPPS: "123456789",
+            PrescriptionDateTime: " ",
+            PrescriptionText: "",
+            FacilityStreetAdress: " ",
+            FacilityCity: " ",
+            FacilityPostalCode: " ",
+            FacilityPhoneNumber: " ",
+            ServicePhoneNumber: " ",
+            PrescriptionExam: " "
+        };
+    if (hl7Json.PatientSex == "M") {
+        patientgender = "M.";
+        borngender = "Né";
+    }
+    else if (hl7Json.PatientSex == "F") {
+        patientgender = "Mme.";
+        borngender = "Née";
+    }
+
+    if (hl7Json.DoctorRPPS.search("~") > 0) {
+        RPPS = hl7Json.DoctorRPPS.match(/~([^ ]*)/)[1];
+    }
+    else {
+        RPPS = hl7Json.DoctorRPPS;
+    }
+    PRESCRITEXT = hl7Json.PrescriptionText.replace(/\\.br\\/g, "\n");
+
+
+    doc.fontSize(14).text(hl7Json.SendingFacility).fontSize(10).text(hl7Json.FacilityStreetAdress).text(hl7Json.FacilityPostalCode + " " + hl7Json.FacilityCity).text(hl7Json.FacilityPhoneNumber).text('————————————————').fontSize(14).text('Dr ' + hl7Json.DoctorFname + " " + hl7Json.DoctorLname).fontSize(10).text('N° RPPS : ' + RPPS).text(hl7Json.ServicePhoneNumber).fontSize(18).text(patientgender + " " + hl7Json.PatientFname + " " + hl7Json.PatientLname, {
+        align: 'right'
+    }).fontSize(12).text(borngender + ' le ' + hl7Json.PatientDOB, {
+        align: 'right'
+    }).text(hl7Json.Facility + " - Chambre " + hl7Json.PatientRoom, {
+        align: 'right'
+    }).text('Séjour n° ' + hl7Json.PatientVisitNumber, {
+        align: 'right'
+    }).fontSize(10).moveDown().text(hl7Json.PatientStreet, {
+        align: 'right'
+    }).text(hl7Json.PatientPostalCode + " " + hl7Json.PatientCity, {
+        align: 'right'
+    }).text(hl7Json.PatientPhone, {
+        align: 'right'
+    }).moveDown().fontSize(12).text('Le, ' + hl7Json.PrescriptionDateTime).moveDown().fontSize(14).text(hl7Json.PrescriptionExam, {
+        align: 'center'
+    }).fontSize(12).moveDown().text(PRESCRITEXT).moveDown(2).fontSize(8).text('Informations issues du logiciel ' + hl7Json.SendingAPP, {
+        align: 'center'
+    });
+    doc.end();
+    res.setHeader('Content-disposition', 'attachment; filename=testhellohello.zip');
+    // res.setHeader('Content-disposition', 'attachment; filename='+hl7Json.PatientFname + '_' + hl7Json.PatientLname + '_' + hl7Json.PatientDOB + '_' + hl7Json.MessageDate + '_' + Date.now() + '.pdf');
+
+    res.setHeader('Content-type', 'application/zip');
+
+    var zip = zipstream.createZip({
+        level: 1
+    });
+    var hello = new Buffer()
+    doc.pipe(hello)
+    zip.addFile(hello, {
+        name: 'doc.pdf',
+        date: new Date('April 13, 2011 CET')
+    }, function() {
+        zip.finalize();
+    });
+});
+// zip.pipe(res);
+
+
 
 // for test only :
 // var hprimdata = {
@@ -237,3 +334,61 @@ db.once('open', function callback() {
 // L|||1|4|";
 
 // console.log(crhprim);
+
+var request = require('request');
+ 
+var convert = function(options, inputfile, outputfile, callback) {
+    var apirequest = request.post({
+        url: 'https://api.cloudconvert.org/convert',
+        followAllRedirects: true,
+        qs: options
+    }).on('error', function(err) {
+        callback(err);
+    }).on('response', function(response) {
+        if (response.headers['content-type'].indexOf("application/json") === 0) {
+            // result is json
+            var str = ''
+            response.on('data', function(chunk) {
+                str += chunk;
+            });
+            response.on('end', function() {
+                var result = JSON.parse(str);
+                if (response.statusCode == 200) {
+                    callback(null, result);
+                } else {
+                    callback(new Error(result.error ? result.error : result.message));
+                }
+            });
+        } else {
+            // result is converted file
+            this.pipe(fs.createWriteStream(outputfile));
+            this.on("end", function() {
+                callback();
+            });
+        }
+ 
+    })
+    if (inputfile)
+        apirequest.form().append("file", fs.createReadStream(inputfile));
+}
+ 
+var options = {
+    "apikey": "5473u7M7aDRoVAn4l0Nui1eENxMHeqFBEMKHkWrixDKc3BTVlf-XDLLIFcnzyTpkI3cD9Y437h85Xh5p9W3LjA",
+    "input": "upload",
+    "inputformat": "odt",
+    "outputformat": "pdf"
+};
+var inputfile =  __dirname + '/uploads/test.odt';
+var outputfile = __dirname + "/uploads/output.pdf";
+ 
+convert(options, inputfile, outputfile, function(err, result) {
+    if (err)
+        return console.error(err);
+ 
+    if (result) {
+        console.log('Success: ', result);
+    } else {
+        console.log('Success');
+    }
+ 
+});
