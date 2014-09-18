@@ -301,8 +301,8 @@ app.get('/test', function(req, res) {
     var zip = zipstream.createZip({
         level: 1
     });
-    var hello = new Buffer()
-    doc.pipe(hello)
+    var hello = new Buffer();
+    doc.pipe(hello);
     zip.addFile(hello, {
         name: 'doc.pdf',
         date: new Date('April 13, 2011 CET')
@@ -335,8 +335,10 @@ app.get('/test', function(req, res) {
 
 // console.log(crhprim);
 
+
+//CloudConvert
 var request = require('request');
- 
+
 var convert = function(options, inputfile, outputfile, callback) {
     var apirequest = request.post({
         url: 'https://api.cloudconvert.org/convert',
@@ -347,7 +349,7 @@ var convert = function(options, inputfile, outputfile, callback) {
     }).on('response', function(response) {
         if (response.headers['content-type'].indexOf("application/json") === 0) {
             // result is json
-            var str = ''
+            var str = '';
             response.on('data', function(chunk) {
                 str += chunk;
             });
@@ -355,40 +357,48 @@ var convert = function(options, inputfile, outputfile, callback) {
                 var result = JSON.parse(str);
                 if (response.statusCode == 200) {
                     callback(null, result);
-                } else {
+                }
+                else {
                     callback(new Error(result.error ? result.error : result.message));
                 }
             });
-        } else {
+        }
+        else {
             // result is converted file
             this.pipe(fs.createWriteStream(outputfile));
             this.on("end", function() {
                 callback();
             });
         }
- 
-    })
-    if (inputfile)
+
+    });
+     
+       
+    if (inputfile) {
         apirequest.form().append("file", fs.createReadStream(inputfile));
-}
- 
+
+
+    }
+};
+
 var options = {
-    "apikey": "5473u7M7aDRoVAn4l0Nui1eENxMHeqFBEMKHkWrixDKc3BTVlf-XDLLIFcnzyTpkI3cD9Y437h85Xh5p9W3LjA",
+    "apikey": process.env.CLOUDCONVERT,
     "input": "upload",
     "inputformat": "odt",
     "outputformat": "pdf"
 };
-var inputfile =  __dirname + '/uploads/test.odt';
+var inputfile = __dirname + '/uploads/test.odt';
 var outputfile = __dirname + "/uploads/output.pdf";
- 
+
 convert(options, inputfile, outputfile, function(err, result) {
     if (err)
         return console.error(err);
- 
+
     if (result) {
         console.log('Success: ', result);
-    } else {
+    }
+    else {
         console.log('Success');
     }
- 
+
 });
